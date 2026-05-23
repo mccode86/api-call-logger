@@ -8,6 +8,10 @@ class DuplicateCallID(Exception):
     pass
 
 
+class CallNotFound(Exception):
+    pass
+
+
 @dataclass
 class APICall:
     call_id: str # Unique ID per call — lets you find/remove one specific record
