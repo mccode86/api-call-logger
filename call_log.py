@@ -17,6 +17,13 @@ class CallLog:
                 return
         raise CallNotFound(f"Call not found: {call_id}")
 
+    def get_by_id(self, call_id: str) -> APICall:
+        for existing in self.calls:
+            if existing.call_id == call_id:
+                return existing
+        raise CallNotFound(f"Call not found: {call_id}")
+
+
 log = CallLog()
 
 call_a = APICall(call_id="abc-001",
@@ -60,6 +67,26 @@ call_c = APICall(call_id="abc-001",
 try:
     log.add(call_c)
 except DuplicateCallID as e:
+    print(f"Caught: {e}")
+
+print(len(log.calls))
+
+log.remove("abc-001")
+print(len(log.calls))
+
+try:
+    log.remove("xyz-999")
+except CallNotFound as e:
+    print(f"Caught: {e}")
+
+print(len(log.calls))
+
+id_test = log.get_by_id("abc-002")
+print(id_test.model)
+
+try:
+    log.get_by_id("xyz-999")
+except CallNotFound as e:
     print(f"Caught: {e}")
 
 print(len(log.calls))
