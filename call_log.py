@@ -1,4 +1,7 @@
 from api_call import APICall, DuplicateCallID, CallNotFound
+import json
+from dataclasses import dataclass, asdict
+from pathlib import Path
 
 class CallLog:
     def __init__(self):
@@ -22,6 +25,19 @@ class CallLog:
             if existing.call_id == call_id:
                 return existing
         raise CallNotFound(f"Call not found: {call_id}")
+
+    def save(self, path: Path) -> None:
+        calls_dicts = [asdict(call) for call in self.calls]
+        with open(path, "w") as f:
+            json.dump(calls_dicts, f, indent=2)
+
+    @classmethod
+    def load(cls, path: Path) -> "CallLog":
+        with open(path, "r") as f:
+            calls_data = json.load(f)
+            new_log = cls()
+            new_log.calls = [APICall(**call_dict) for call_dict in calls_data]
+            return new_log
 
 
 log = CallLog()
@@ -90,3 +106,8 @@ except CallNotFound as e:
     print(f"Caught: {e}")
 
 print(len(log.calls))
+
+log.save(Path("calls.json"))
+
+loaded_log = CallLog.load(Path("calls.json"))
+print(len(loaded_log.calls))
