@@ -3,6 +3,7 @@ import json
 from dataclasses import dataclass, asdict
 from pathlib import Path
 
+
 class CallLog:
     def __init__(self):
         self.calls: list[APICall] = []
@@ -39,6 +40,20 @@ class CallLog:
             new_log.calls = [APICall(**call_dict) for call_dict in calls_data]
             return new_log
 
+    def find_by_model(self, model: str) -> list[APICall]:
+        return [call for call in self.calls if call.model == model]
+
+    def find_by_cost_range(self, min_cost: float, max_cost: float) -> list[APICall]:
+        return [call for call in self.calls if min_cost <= call.cost_usd <= max_cost]
+
+    def find_by_tag(self, tag: str) -> list[APICall]:
+        return [call for call in self.calls if tag in call.tags]
+
+    def sorted_by_cost(self) -> list[APICall]:
+        return sorted(self.calls, key=lambda call: call.cost_usd)
+
+    def sorted_by_latency(self) -> list[APICall]:
+        return sorted(self.calls, key=lambda call: call.latency_ms)
 
 log = CallLog()
 
@@ -111,3 +126,60 @@ log.save(Path("calls.json"))
 
 loaded_log = CallLog.load(Path("calls.json"))
 print(len(loaded_log.calls))
+
+call_d = APICall(call_id="efg-001",
+                 model="claude-haiku-4-5",
+                 input_tokens=10000,
+                 output_tokens=25000,
+                 cost_usd=0.50,
+                 latency_ms=1000,
+                 prompt_excerpt="what was I asking?",
+                 response_excerpt="You're asking about token usage",
+                 tags=["production", "user-facing"],
+                 timestamp="2026-05-23T14:30:00")
+
+call_e = APICall(call_id="efg-002",
+                 model="claude-sonnet-4-6",
+                 input_tokens=10000,
+                 output_tokens=25000,
+                 cost_usd=5.00,
+                 latency_ms=2000,
+                 prompt_excerpt="what was I asking?",
+                 response_excerpt="You're asking about token usage",
+                 tags=["production", "user-facing"],
+                 timestamp="2026-05-23T14:30:00")
+
+call_f = APICall(call_id="efg-003",
+                 model="claude-sonnet-4-5",
+                 input_tokens=10000,
+                 output_tokens=25000,
+                 cost_usd=1.50,
+                 latency_ms=3000,
+                 prompt_excerpt="what was I asking?",
+                 response_excerpt="You're asking about token usage",
+                 tags=["production", "user-facing"],
+                 timestamp="2026-05-23T14:30:00")
+
+log.add(call_d)
+log.add(call_e)
+log.add(call_f)
+
+print(log.find_by_model("claude-sonnet-4-6"))
+print([call.cost_usd for call in log.find_by_model("claude-sonnet-4-6")])
+
+print(len(log.calls))
+
+find_model = log.find_by_model("gpt-4")
+print(find_model)
+
+find_model_d = log.find_by_model("claude-haiku-4-5")
+print(find_model_d[0].input_tokens)
+
+print([call.cost_usd for call in log.find_by_cost_range(0.50, 5.00)])
+print(log.find_by_cost_range(0.10, 0.20))
+
+print([call.tags for call in log.find_by_tag("production")])
+print(log.find_by_tag("transformer"))
+
+print([call.cost_usd for call in log.sorted_by_cost()])
+print([call.latency_ms for call in log.sorted_by_latency()])
