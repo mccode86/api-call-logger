@@ -1,7 +1,11 @@
+from unittest import result
+
 from api_call import APICall, DuplicateCallID, CallNotFound
 import json
 from dataclasses import dataclass, asdict
 from pathlib import Path
+from collections import Counter
+from collections import defaultdict
 
 
 class CallLog:
@@ -54,6 +58,20 @@ class CallLog:
 
     def sorted_by_latency(self) -> list[APICall]:
         return sorted(self.calls, key=lambda call: call.latency_ms)
+
+    def model_distribution(self) -> Counter:
+        return Counter(call.model for call in self.calls)
+
+    def cost_by_model(self) -> dict[str, float]:
+        result = defaultdict(float)
+        for call in self.calls:
+            result[call.model] += call.cost_usd
+        return dict(result)
+
+    def top_model_by_cost(self) -> str:
+        cost = self.cost_by_model()
+        return max(cost, key=lambda model: cost[model])
+
 
 log = CallLog()
 
@@ -183,3 +201,9 @@ print(log.find_by_tag("transformer"))
 
 print([call.cost_usd for call in log.sorted_by_cost()])
 print([call.latency_ms for call in log.sorted_by_latency()])
+
+print(log.model_distribution())
+
+print(log.cost_by_model())
+
+print(log.top_model_by_cost())
