@@ -2,3 +2,4 @@ calls.json
 __pycache__/
 .DS_Store
 .idea/
+.env
