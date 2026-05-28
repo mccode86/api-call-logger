@@ -1,5 +1,3 @@
-from unittest import result
-
 from api_call import APICall, DuplicateCallID, CallNotFound
 import json
 from dataclasses import dataclass, asdict
